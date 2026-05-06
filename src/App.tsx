@@ -1,5 +1,20 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Check, FileSignature, PenLine, ShieldCheck, Sparkles, X } from 'lucide-react'
+import {
+  BadgeCheck,
+  Check,
+  Cloud,
+  FileSignature,
+  LayoutTemplate,
+  Mail,
+  PenLine,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Users,
+  Package,
+  Webhook,
+  X,
+} from 'lucide-react'
 
 import { guideArticles, findGuideByPath } from './content/guides'
 import { buildSeoDocument, syncSeoDocument } from './lib/seo'
@@ -231,6 +246,9 @@ export default function App() {
           <span className="brand-name">DocuSeal Cloud</span>
         </a>
         <nav className="ds-nav" aria-label="Primary">
+          <a href="/#capabilities" onClick={() => navigate('/#capabilities')}>
+            Product
+          </a>
           <a href="/#live-demo" onClick={() => navigate('/#live-demo')}>
             Live demo
           </a>
@@ -330,9 +348,10 @@ export default function App() {
             <p className="ds-eyebrow">Open-core signing, without the science project</p>
             <h1>Send a PDF. Collect signatures. Keep the audit trail.</h1>
             <p className="ds-lede">
-              DocuSeal Cloud packages the same practical surface area teams expect from DocuSeal-class tooling: templates,
-              multi-signer flows, delivery, and exports — tuned so your first productive send happens this week, not next
-              quarter.
+              This site is about <strong>PDF templates, filling, and e-signing</strong> — the same problem space as the
+              open-source DocuSeal project: build fields, invite submitters, deliver over email, store files, verify
+              signatures, and integrate via API/webhooks. There is <strong>no file-type detection</strong> here; anything
+              that looks like “upload to guess MIME” belongs to a different product.
             </p>
             <div className="ds-hero-actions">
               <button type="button" className="ds-btn ds-btn-primary" onClick={openCheckoutModal}>
@@ -341,6 +360,14 @@ export default function App() {
               </button>
               <a className="ds-btn ds-btn-ghost" href="#live-demo" onClick={() => navigate('/#live-demo')}>
                 Try the live surface
+              </a>
+              <a
+                className="ds-btn ds-btn-ghost"
+                href="https://github.com/docusealco/docuseal"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                Upstream on GitHub
               </a>
             </div>
             <p className="ds-micro-trust">
@@ -366,6 +393,81 @@ export default function App() {
             />
           </div>
         </div>
+
+        <section className="ds-section" id="capabilities" aria-labelledby="cap-head">
+          <h2 id="cap-head">What “DocuSeal-class” means here</h2>
+          <p style={{ color: '#64748b', maxWidth: '70ch', marginTop: 0 }}>
+            The open DocuSeal stack centers on <strong>fillable PDFs and signatures</strong>. DocuSeal Cloud is a hosted
+            packaging of that workflow—not a generic file inspector. Below mirrors the upstream project’s headline
+            capabilities so you can compare apples to apples.
+          </p>
+          <div
+            className="ds-how-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0,1fr))',
+              gap: '16px',
+              marginTop: '22px',
+            }}
+          >
+            {[
+              {
+                title: 'PDF form builder',
+                body: 'WYSIWYG layout with many field types—signature, date, checkbox, file upload, and more—so contracts and forms match how you actually collect data.',
+                icon: <LayoutTemplate size={20} />,
+              },
+              {
+                title: 'Multiple submitters',
+                body: 'One document, several people in sequence (or roles), with invitations and completion tracking instead of email ping-pong.',
+                icon: <Users size={20} />,
+              },
+              {
+                title: 'SMTP delivery',
+                body: 'Automated emails for invites and reminders, wired to your domain reputation work—not a side channel you bolt on later.',
+                icon: <Mail size={20} />,
+              },
+              {
+                title: 'Storage you control',
+                body: 'Keep files on disk in your deployment model, or route to object storage patterns teams already use (S3-class, GCS, Azure-style backends in self-hosted setups).',
+                icon: <Cloud size={20} />,
+              },
+              {
+                title: 'Sign & verify PDFs',
+                body: 'Automatic PDF e-signatures plus verification flows so legal and ops can trust what they archive.',
+                icon: <BadgeCheck size={20} />,
+              },
+              {
+                title: 'Users, mobile, languages',
+                body: 'Account management for operators, mobile-friendly signing, and broad UI/signing language coverage for international recipients.',
+                icon: <Smartphone size={20} />,
+              },
+              {
+                title: 'API & webhooks',
+                body: 'Integrate with CRM, billing, or internal tools: create submissions, listen for completion, and pull artifacts without babysitting inboxes.',
+                icon: <Webhook size={20} />,
+              },
+              {
+                title: 'Deploy & embed paths',
+                body: 'Docker-friendly operation upstream; here we bias toward a managed rollout. Product teams can also follow embedded signing/builder paths (for example docuseal-react) when you need UI inside your app.',
+                icon: <Package size={20} />,
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                style={{
+                  borderRadius: '16px',
+                  border: '1px solid rgba(15,23,42,0.1)',
+                  padding: '18px',
+                  background: 'rgba(255,255,255,0.78)',
+                }}
+              >
+                <div style={{ color: '#2563eb', marginBottom: '10px' }}>{card.icon}</div>
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.05rem' }}>{card.title}</h3>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>{card.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="ds-section" aria-labelledby="how-it-works">
           <h2 id="how-it-works">Three moves. One calm pipeline.</h2>

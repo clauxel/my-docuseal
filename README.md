@@ -17,6 +17,10 @@ npx wrangler dev
 
 Vite proxies `/api` to `http://127.0.0.1:8787` (see `vite.config.ts`).
 
+## If the live site looks wrong
+
+If you still see a **file-type detector** (“Detect type”, MIME/confidence, “$1 per analysis”), the hostname is serving an **older Worker/Pages build** (often a Magika-era bundle). Purge cache, confirm the route targets the **`my-docuseal`** Worker that includes this `dist`, then redeploy from this repository.
+
 ## Cloudflare
 
 1. `npm run cloudflare:deploy` (requires `CLOUDFLARE_API_TOKEN` with Workers edit scope).
