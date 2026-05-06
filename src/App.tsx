@@ -510,6 +510,31 @@ export default function App() {
               ) : null}
             </article>
           ))}
+          <aside
+            style={{
+              marginTop: '36px',
+              padding: '18px',
+              borderRadius: '14px',
+              border: '1px solid rgba(37,99,235,0.2)',
+              background: 'rgba(239,246,255,0.85)',
+            }}
+          >
+            <strong style={{ display: 'block', marginBottom: '8px', color: '#1e3a8a' }}>Next step</strong>
+            <p style={{ margin: 0, color: '#475569' }}>
+              If this matches how your team works,{' '}
+              <a
+                className="ds-link"
+                href="/#pricing"
+                onClick={(e) => {
+                  e.preventDefault()
+                  navigate('/#pricing')
+                }}
+              >
+                compare plans
+              </a>{' '}
+              and start with Team on annual billing — most pilots stay there after the first production send.
+            </p>
+          </aside>
         </article>
       </main>
     )

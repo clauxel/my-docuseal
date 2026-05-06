@@ -31,6 +31,17 @@ Vite proxies `/api` to `http://127.0.0.1:8787` (see `vite.config.ts`).
 
 Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Pushes to `main` run `.github/workflows/cloudflare.yml`.
 
+## GitHub repository
+
+Create an empty repository named `my-docuseal` on GitHub (UI or a PAT with **`repo`** scope), then:
+
+```bash
+git remote add origin git@github.com:<you>/my-docuseal.git
+git push -u origin main
+```
+
+If the GitHub API returns **403 Resource not accessible by personal access token**, the token cannot create repositories — create the repo manually or regenerate a classic PAT with `repo`.
+
 ## Cloudflare Pages (optional mirror)
 
 Create a Pages project with root `docuseal`, build `npm run build`, output `dist`. The included `functions/[[path]].js` enforces HTTPS and apex canonical host for static hosting. **Hosted checkout still requires the Worker** (or duplicate `/api` in Pages Functions).
