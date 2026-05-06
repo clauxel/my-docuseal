@@ -379,18 +379,42 @@ export default function App() {
             <header>
               <span>
                 <FileSignature size={16} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 8 }} />
-                Live signing UI (public demo)
+                Live surface (public embed)
               </span>
               <span style={{ fontWeight: 600, color: '#64748b' }}>Mobile-ready</span>
             </header>
             <iframe
               className="ds-demo-frame"
-              title="DocuSeal public demo"
-              src="https://demo.docuseal.tech/"
+              title="DocuSeal public embed demo"
+              src="https://embed.docuseal.tech/"
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
               allow="clipboard-write"
             />
+            <div
+              style={{
+                padding: '10px 14px',
+                fontSize: '0.84rem',
+                borderTop: '1px solid rgba(15,23,42,0.08)',
+                color: '#64748b',
+                background: 'rgba(248,250,252,0.95)',
+              }}
+            >
+              If the preview stays blank or shows “connection refused”, your network may be blocking the host—open the
+              same UI in a new tab:{' '}
+              <a className="ds-link" href="https://embed.docuseal.tech/" target="_blank" rel="noreferrer noopener">
+                Embed demo
+              </a>
+              {' · '}
+              <a className="ds-link" href="https://demo.docuseal.tech/" target="_blank" rel="noreferrer noopener">
+                Full builder demo
+              </a>
+              {' · '}
+              <a className="ds-link" href="https://www.docuseal.com/start" target="_blank" rel="noreferrer noopener">
+                Hosted DocuSeal
+              </a>
+              .
+            </div>
           </div>
         </div>
 
