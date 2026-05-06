@@ -19,11 +19,12 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run build
+      - name: Add Pages SPA fallback
+        run: printf '/* /index.html 200\n' > dist/_redirects
       - name: Pages deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=my-docuseal
+        run: npx wrangler pages deploy dist --project-name=my-docuseal
         env:
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: false

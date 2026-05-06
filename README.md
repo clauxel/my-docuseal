@@ -43,13 +43,13 @@ Attach custom hostnames **docuseal.space** and **www.docuseal.space** to the Wor
 
 Create a Pages project named `my-docuseal` with build command `npm run build` and output directory `dist`. The repo includes:
 
-- `public/_redirects` so SPA guide routes resolve to `index.html`.
+- A Pages workflow step that writes `dist/_redirects` so SPA guide routes resolve to `index.html`.
 - `functions/[[path]].js` so Pages can handle `/api/*` through the same Worker checkout/runtime logic.
 - `.github/workflows/cloudflare-pages.yml`, which deploys Pages on pushes to `main`.
 
 ## GitHub Actions
 
-Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Pushes to `main` run both Worker and Pages deployment workflows.
+Add repository secrets `CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, and `CLOUDFLARE_ACCOUNT_ID`. Pushes to `main` run both Worker and Pages deployment workflows.
 
 ## GitHub Repository
 
