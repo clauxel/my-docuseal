@@ -284,8 +284,9 @@ export default function App() {
         </a>
         <span className="footer-divider">·</span>
         <span>Guides:</span>{' '}
-        {guideArticles.slice(0, 4).map((g) => (
+        {guideArticles.map((g, i) => (
           <span key={g.path}>
+            {i > 0 ? <span className="footer-divider">·</span> : null}
             <a
               className="ds-link"
               href={g.path}
@@ -296,19 +297,8 @@ export default function App() {
             >
               {g.h1}
             </a>
-            <span className="footer-divider">·</span>
           </span>
         ))}
-        <a
-          className="ds-link"
-          href="/guides/docuseal-alternative"
-          onClick={(e) => {
-            e.preventDefault()
-            navigate('/guides/docuseal-alternative')
-          }}
-        >
-          Alternatives
-        </a>
       </div>
     </footer>
   )
