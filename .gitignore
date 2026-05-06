@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+*.tsbuildinfo
+.DS_Store
+.runtime/
+.python_packages/
+.codex_tmp*
+*.tmp
+tmp/

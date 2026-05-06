@@ -1,0 +1,21 @@
+name = "my-docuseal"
+main = "worker/index.js"
+compatibility_date = "2026-05-06"
+
+[vars]
+CREEM_API_BASE = "https://api.creem.io"
+# Set product IDs from your Creem dashboard (Workers → Settings → Variables).
+# CREEM_PRODUCT_STARTER_MONTHLY = ""
+# CREEM_PRODUCT_STARTER_YEARLY = ""
+# CREEM_PRODUCT_TEAM_MONTHLY = ""
+# CREEM_PRODUCT_TEAM_YEARLY = ""
+# CREEM_PRODUCT_SCALE_MONTHLY = ""
+# CREEM_PRODUCT_SCALE_YEARLY = ""
+
+# Store CREEM_API_KEY as a Worker secret: wrangler secret put CREEM_API_KEY
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]

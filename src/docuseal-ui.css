@@ -1,0 +1,370 @@
+/* DocuSeal Cloud — focused layout tokens (rest of shell reuses styles.css) */
+.ds-main {
+  padding-top: 72px;
+}
+
+.ds-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: start;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) 0 clamp(48px, 7vw, 88px);
+}
+
+@media (max-width: 960px) {
+  .ds-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ds-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2563eb;
+  margin: 0 0 10px;
+}
+
+.ds-hero h1 {
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-size: clamp(2.1rem, 4.6vw, 3.15rem);
+  line-height: 1.08;
+  margin: 0 0 16px;
+  color: #0c1422;
+}
+
+.ds-hero p.ds-lede {
+  font-size: 1.08rem;
+  color: #3d4b5c;
+  max-width: 46ch;
+  margin: 0 0 22px;
+}
+
+.ds-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.ds-btn:active {
+  transform: translateY(1px);
+}
+
+.ds-btn-primary {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #f8fafc;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.28);
+}
+
+.ds-btn-primary:hover {
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.34);
+}
+
+.ds-btn-ghost {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+.ds-micro-trust {
+  font-size: 0.88rem;
+  color: #5d6c79;
+}
+
+.ds-demo-panel {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+}
+
+.ds-demo-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.ds-demo-frame {
+  width: 100%;
+  height: min(520px, 62vh);
+  border: 0;
+  background: #fff;
+}
+
+.ds-section {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.ds-section h2 {
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin: 0 0 12px;
+  color: #0c1422;
+}
+
+.ds-pricing-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.ds-cycle {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ds-cycle button {
+  border: 0;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.ds-cycle button[data-active='true'] {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.ds-plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .ds-plans {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ds-plan {
+  position: relative;
+  border-radius: 16px;
+  padding: 20px 18px 18px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.ds-plan[data-popular='true'] {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.12);
+}
+
+.ds-plan-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.ds-plan h3 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.ds-plan .ds-price-line {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ds-plan .ds-price-line small {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.ds-plan .ds-strike {
+  text-decoration: line-through;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.ds-plan ul {
+  margin: 14px 0 16px;
+  padding-left: 18px;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.ds-plan li {
+  margin-bottom: 6px;
+}
+
+.ds-plan button {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.ds-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.ds-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 16, 28, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.ds-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  max-height: min(860px, 92vh);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-modal-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-weight: 800;
+}
+
+.ds-modal-close {
+  border: 0;
+  background: rgba(15, 23, 42, 0.06);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.ds-checkout-frame {
+  flex: 1;
+  min-height: 420px;
+  border: 0;
+  width: 100%;
+}
+
+.ds-guide {
+  width: min(820px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.ds-guide h1 {
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+  margin: 0 0 12px;
+}
+
+.ds-guide .ds-lede {
+  font-size: 1.1rem;
+  color: #475569;
+  margin-bottom: 28px;
+}
+
+.ds-guide article h2 {
+  font-size: 1.2rem;
+  margin: 28px 0 10px;
+  color: #0f172a;
+}
+
+.ds-guide article p {
+  color: #475569;
+  margin: 0 0 12px;
+}
+
+.ds-guide article ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: #475569;
+}
+
+.ds-guide article li {
+  margin-bottom: 6px;
+}
+
+.ds-link {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .ds-how-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.ds-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+}
+
+.ds-nav a {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #475569;
+}
+
+.ds-nav a:hover {
+  color: #0f172a;
+}
