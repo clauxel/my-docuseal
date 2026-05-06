@@ -1,6 +1,6 @@
 # DocuSeal Cloud
 
-Marketing and checkout site for **docuseal.space** — built with Vite + React, deployed as a Cloudflare Worker with static assets. Checkout is created server-side via the Creem API (`/api/checkout`).
+Marketing and checkout site for **docuseal.space**. It uses Vite + React for the public site, Cloudflare Workers Assets for the primary deployment, and Cloudflare Pages as an automatic static mirror with Pages Functions for `/api/*`.
 
 ## Local
 
@@ -15,37 +15,44 @@ API routes need a Worker. In one terminal:
 npx wrangler dev
 ```
 
-Vite proxies `/api` to `http://127.0.0.1:8787` (see `vite.config.ts`).
+## Cloudflare Worker
 
-## If the live site looks wrong
+1. Deploy with `npm run cloudflare:deploy`.
+2. Store one live Creem key as a Worker secret:
 
-If you still see a **file-type detector** (“Detect type”, MIME/confidence, “$1 per analysis”), the hostname is serving an **older Worker/Pages build** (often a Magika-era bundle). Purge cache, confirm the route targets the **`my-docuseal`** Worker that includes this `dist`, then redeploy from this repository.
+```bash
+npx wrangler secret put API_PROD_KEY
+```
 
-## Cloudflare
+Accepted aliases are `CREEM_API_KEY` or an account Secrets Store binding named `CREEM_KEY`.
 
-1. `npm run cloudflare:deploy` (requires `CLOUDFLARE_API_TOKEN` with Workers edit scope).
-2. `wrangler secret put CREEM_API_KEY`
-3. In the Worker, set plain-text vars for each Creem product id:
-   - `CREEM_PRODUCT_STARTER_MONTHLY`, `CREEM_PRODUCT_STARTER_YEARLY`
-   - `CREEM_PRODUCT_TEAM_MONTHLY`, `CREEM_PRODUCT_TEAM_YEARLY`
-   - `CREEM_PRODUCT_SCALE_MONTHLY`, `CREEM_PRODUCT_SCALE_YEARLY`
-4. Attach custom hostnames **docuseal.space** and **www.docuseal.space** to the Worker. **SSL/TLS → Edge Certificates → Always Use HTTPS: On** (redirects `http` → `https`).
+Creem product IDs are optional. If these vars are omitted, the Worker creates matching one-time Creem products on demand:
+
+```text
+CREEM_PRODUCT_STARTER_MONTHLY
+CREEM_PRODUCT_STARTER_YEARLY
+CREEM_PRODUCT_TEAM_MONTHLY
+CREEM_PRODUCT_TEAM_YEARLY
+CREEM_PRODUCT_SCALE_MONTHLY
+CREEM_PRODUCT_SCALE_YEARLY
+```
+
+Attach custom hostnames **docuseal.space** and **www.docuseal.space** to the Worker. Keep Cloudflare **Always Use HTTPS** enabled; the Worker and Pages Function also redirect HTTP and `www` to the apex HTTPS host.
+
+## Cloudflare Pages
+
+Create a Pages project named `my-docuseal` with build command `npm run build` and output directory `dist`. The repo includes:
+
+- `public/_redirects` so SPA guide routes resolve to `index.html`.
+- `functions/[[path]].js` so Pages can handle `/api/*` through the same Worker checkout/runtime logic.
+- `.github/workflows/cloudflare-pages.yml`, which deploys Pages on pushes to `main`.
 
 ## GitHub Actions
 
-Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Pushes to `main` run `.github/workflows/cloudflare.yml`.
+Add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Pushes to `main` run both Worker and Pages deployment workflows.
 
-## GitHub repository
+## GitHub Repository
 
-Create an empty repository named `my-docuseal` on GitHub (UI or a PAT with **`repo`** scope), then:
+Repository target: `git@github.com:clauxel/my-docuseal.git`.
 
-```bash
-git remote add origin git@github.com:<you>/my-docuseal.git
-git push -u origin main
-```
-
-If the GitHub API returns **403 Resource not accessible by personal access token**, the token cannot create repositories — create the repo manually or regenerate a classic PAT with `repo`.
-
-## Cloudflare Pages (optional mirror)
-
-Create a Pages project with root `docuseal`, build `npm run build`, output `dist`. The included `functions/[[path]].js` enforces HTTPS and apex canonical host for static hosting. **Hosted checkout still requires the Worker** (or duplicate `/api` in Pages Functions).
+If GitHub API repository creation returns `403 Resource not accessible by personal access token`, use a PAT with repo creation rights or create the empty repo manually, then push `main`.

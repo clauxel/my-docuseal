@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   Check,
   Cloud,
-  FileSignature,
   LayoutTemplate,
   Mail,
   PenLine,
@@ -13,7 +12,6 @@ import {
   Users,
   Package,
   Webhook,
-  X,
 } from 'lucide-react'
 
 import { guideArticles, findGuideByPath } from './content/guides'
@@ -25,6 +23,14 @@ const defaultPublicAppOrigin = 'https://docuseal.space'
 type Billing = 'monthly' | 'annual'
 
 type PlanId = 'starter' | 'team' | 'scale'
+
+type CheckoutModalState = {
+  planId: PlanId
+  billing: Billing
+  loadingKey: string
+  status: 'starting' | 'redirecting' | 'retry'
+  checkoutUrl?: string
+}
 
 const plans: Array<{
   id: PlanId
@@ -62,6 +68,16 @@ function formatMoney(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
+async function readJsonResponse<T>(response: Response): Promise<T | null> {
+  const rawText = await response.text()
+  if (!rawText.trim()) return null
+  try {
+    return JSON.parse(rawText) as T
+  } catch {
+    return null
+  }
+}
+
 function usePathnameSignal() {
   const [pathname, setPathname] = useState(() => window.location.pathname)
 
@@ -90,9 +106,12 @@ async function createCheckoutSession(planId: PlanId, billing: Billing) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ planId, billing }),
   })
-  const payload = (await response.json()) as { ok?: boolean; checkoutUrl?: string; error?: string }
-  if (!response.ok || !payload.ok || !payload.checkoutUrl) {
-    throw new Error(typeof payload.error === 'string' ? payload.error : 'Checkout could not be started.')
+
+  const payload = await readJsonResponse<{ ok?: boolean; checkoutUrl?: string; error?: string }>(response)
+
+  if (!response.ok || !payload || !payload.ok || !payload.checkoutUrl) {
+    const message = payload && typeof payload.error === 'string' ? payload.error : 'Checkout could not be started.'
+    throw new Error(message)
   }
   return payload.checkoutUrl
 }
@@ -134,18 +153,15 @@ export default function App() {
   const [publicAppOrigin, setPublicAppOrigin] = useState(defaultPublicAppOrigin)
   const [headerCompact, setHeaderCompact] = useState(() => window.scrollY > 18)
   const [billing, setBilling] = useState<Billing>('annual')
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>('team')
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [checkoutError, setCheckoutError] = useState('')
+  const [checkoutLoadingKey, setCheckoutLoadingKey] = useState<string | null>(null)
+  const [checkoutModal, setCheckoutModal] = useState<CheckoutModalState | null>(null)
 
   useEffect(() => {
     let cancelled = false
     fetch('/api/runtime')
-      .then((r) => r.json())
-      .then((payload: { publicAppOrigin?: string }) => {
-        if (!cancelled && typeof payload.publicAppOrigin === 'string' && payload.publicAppOrigin) {
+      .then((r) => readJsonResponse<{ publicAppOrigin?: string }>(r))
+      .then((payload) => {
+        if (!cancelled && payload && typeof payload.publicAppOrigin === 'string' && payload.publicAppOrigin) {
           setPublicAppOrigin(payload.publicAppOrigin)
         }
       })
@@ -177,11 +193,7 @@ export default function App() {
     const allowed = new URL(publicAppOrigin).origin
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== allowed) return
-      if (event.data?.type === 'docuseal-checkout-complete') {
-        setCheckoutOpen(false)
-        setCheckoutUrl(null)
-        navigate('/?checkout=complete')
-      }
+      if (event.data?.type === 'docuseal-checkout-complete') navigate('/?checkout=complete')
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
@@ -194,24 +206,99 @@ export default function App() {
     }
   }, [pathname])
 
-  const openCheckoutModal = useCallback(() => {
-    setCheckoutError('')
-    setCheckoutUrl(null)
-    setCheckoutOpen(true)
+  const startHostedCheckout = useCallback(async (planId: PlanId, nextBilling: Billing, loadingKey: string) => {
+    setCheckoutLoadingKey(loadingKey)
+    setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'starting' })
+    try {
+      const url = await createCheckoutSession(planId, nextBilling)
+      setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'redirecting', checkoutUrl: url })
+      window.setTimeout(() => window.location.assign(url), 420)
+    } catch {
+      setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'retry' })
+      setCheckoutLoadingKey(null)
+    }
   }, [])
 
-  const startHostedCheckout = useCallback(async () => {
-    setCheckoutLoading(true)
-    setCheckoutError('')
-    try {
-      const url = await createCheckoutSession(selectedPlan, billing)
-      setCheckoutUrl(url)
-    } catch (e) {
-      setCheckoutError(e instanceof Error ? e.message : 'Checkout failed.')
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }, [billing, selectedPlan])
+  const renderCheckoutModal = () => {
+    if (!checkoutModal) return null
+
+    const fallbackPlan = plans.find((plan) => plan.id === 'team') as (typeof plans)[number]
+    const selectedPlan = plans.find((plan) => plan.id === checkoutModal.planId) ?? fallbackPlan
+    const selectedMonthly = checkoutModal.billing === 'annual' ? selectedPlan.monthlyUsd * 0.5 : selectedPlan.monthlyUsd
+    const selectedTotal =
+      checkoutModal.billing === 'annual'
+        ? `${formatMoney(selectedMonthly * 12)} billed today`
+        : `${formatMoney(selectedMonthly)} billed today`
+    const canClose = checkoutModal.status !== 'redirecting'
+    const statusCopy =
+      checkoutModal.status === 'retry'
+        ? "The secure session didn't open. Your selected plan is saved, so one retry is enough."
+        : checkoutModal.status === 'redirecting'
+          ? 'Secure checkout is opening now. After payment, you return to the homepage automatically.'
+          : 'Preparing the hosted checkout with the recommended annual savings applied.'
+
+    return (
+      <div className="ds-checkout-backdrop" role="presentation">
+        <section className="ds-checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+          {canClose ? (
+            <button type="button" className="ds-checkout-close" aria-label="Close checkout" onClick={() => setCheckoutModal(null)}>
+              ×
+            </button>
+          ) : null}
+          <p className="ds-checkout-kicker">Secure checkout</p>
+          <h2 id="checkout-title">
+            {selectedPlan.name} {checkoutModal.billing === 'annual' ? 'annual' : 'monthly'} is ready.
+          </h2>
+          <p className="ds-checkout-copy">{statusCopy}</p>
+          <div className="ds-checkout-summary">
+            <span>
+              {formatMoney(selectedMonthly)}
+              <small>/mo</small>
+            </span>
+            <strong>{selectedTotal}</strong>
+          </div>
+          <div className="ds-checkout-proof">
+            <span>Recommended start: Team annual</span>
+            <span>50% annual savings, unlimited templates, CSV bulk send, signer roles, and priority setup help.</span>
+          </div>
+          <ul className="ds-checkout-list">
+            <li>Hosted DocuSeal-class template and signing workflow.</li>
+            <li>Audit-ready PDF exports and webhook-ready completion events.</li>
+            <li>Payment completes on Creem and returns here after success.</li>
+          </ul>
+          {checkoutModal.status === 'retry' ? (
+            <div className="ds-checkout-actions">
+              <button
+                type="button"
+                className="ds-btn ds-btn-primary"
+                onClick={() =>
+                  void startHostedCheckout(checkoutModal.planId, checkoutModal.billing, checkoutModal.loadingKey)
+                }
+                disabled={checkoutLoadingKey !== null}
+              >
+                Try secure checkout again
+              </button>
+              <button
+                type="button"
+                className="ds-btn ds-btn-ghost"
+                onClick={() => {
+                  setCheckoutModal(null)
+                  navigate('/#pricing')
+                }}
+              >
+                Review pricing
+              </button>
+            </div>
+          ) : (
+            <div className="ds-checkout-progress" aria-live="polite">
+              <span />
+              {checkoutModal.status === 'redirecting' ? 'Opening hosted checkout…' : 'Creating secure checkout…'}
+            </div>
+          )}
+        </section>
+      </div>
+    )
+  }
 
   const normalizedPath = normalizePathname(pathname)
 
@@ -249,9 +336,6 @@ export default function App() {
           <a href="/#capabilities" onClick={() => navigate('/#capabilities')}>
             Product
           </a>
-          <a href="/#live-demo" onClick={() => navigate('/#live-demo')}>
-            Live demo
-          </a>
           <a href="/#pricing" onClick={() => navigate('/#pricing')}>
             Pricing
           </a>
@@ -266,8 +350,13 @@ export default function App() {
           </a>
         </nav>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button type="button" className="ds-btn ds-btn-ghost" onClick={openCheckoutModal}>
-            Start now
+          <button
+            type="button"
+            className="ds-btn ds-btn-ghost"
+            onClick={() => void startHostedCheckout('team', 'annual', 'nav-team-annual')}
+            disabled={checkoutLoadingKey !== null}
+          >
+            {checkoutLoadingKey === 'nav-team-annual' ? 'Starting…' : 'Start now'}
           </button>
         </div>
       </div>
@@ -345,76 +434,37 @@ export default function App() {
 
         <div className="ds-hero-grid" id="top">
           <div className="ds-hero">
-            <p className="ds-eyebrow">Open-core signing, without the science project</p>
-            <h1>Send a PDF. Collect signatures. Keep the audit trail.</h1>
+            <p className="ds-eyebrow">Hosted DocuSeal workflows</p>
+            <h1>Build fillable PDFs, send signing links, and keep every signed copy ready to file.</h1>
             <p className="ds-lede">
-              This site is about <strong>PDF templates, filling, and e-signing</strong> — the same problem space as the
-              open-source DocuSeal project: build fields, invite submitters, deliver over email, store files, verify
-              signatures, and integrate via API/webhooks. There is <strong>no file-type detection</strong> here; anything
-              that looks like “upload to guess MIME” belongs to a different product.
+              Turn the DocuSeal flow into a cleaner hosted surface: reusable templates, signer routing, reminder delivery,
+              audit-ready PDFs, and webhook exports without asking your team to self-host the stack first.
             </p>
+            <div className="ds-hero-chips" aria-label="Key features">
+              <span>Template builder</span>
+              <span>Signer roles</span>
+              <span>Audit trail</span>
+              <span>API + webhooks</span>
+            </div>
             <div className="ds-hero-actions">
-              <button type="button" className="ds-btn ds-btn-primary" onClick={openCheckoutModal}>
-                <Sparkles size={18} />
-                Start with Team (annual)
-              </button>
-              <a className="ds-btn ds-btn-ghost" href="#live-demo" onClick={() => navigate('/#live-demo')}>
-                Try the live surface
-              </a>
-              <a
-                className="ds-btn ds-btn-ghost"
-                href="https://github.com/docusealco/docuseal"
-                target="_blank"
-                rel="noreferrer noopener"
+              <button
+                type="button"
+                className="ds-btn ds-btn-primary"
+                onClick={() => void startHostedCheckout('team', 'annual', 'hero-team-annual')}
+                disabled={checkoutLoadingKey !== null}
               >
-                Upstream on GitHub
-              </a>
+                <Sparkles size={18} />
+                {checkoutLoadingKey === 'hero-team-annual' ? 'Starting secure checkout…' : 'Start Team annual'}
+              </button>
+            </div>
+            <div className="ds-conversion-panel">
+              <strong>Why teams start on Team annual</strong>
+              <span>50% annual savings, unlimited templates, CSV bulk send, signer roles, and priority setup help.</span>
             </div>
             <p className="ds-micro-trust">
               <ShieldCheck size={16} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 6 }} />
               SOC-minded defaults: HTTPS-only, explicit retention controls, and exports you can file away.
             </p>
-          </div>
-          <div className="ds-demo-panel" id="live-demo">
-            <header>
-              <span>
-                <FileSignature size={16} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 8 }} />
-                Live surface (public embed)
-              </span>
-              <span style={{ fontWeight: 600, color: '#64748b' }}>Mobile-ready</span>
-            </header>
-            <iframe
-              className="ds-demo-frame"
-              title="DocuSeal public embed demo"
-              src="https://embed.docuseal.tech/"
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allow="clipboard-write"
-            />
-            <div
-              style={{
-                padding: '10px 14px',
-                fontSize: '0.84rem',
-                borderTop: '1px solid rgba(15,23,42,0.08)',
-                color: '#64748b',
-                background: 'rgba(248,250,252,0.95)',
-              }}
-            >
-              If the preview stays blank or shows “connection refused”, your network may be blocking the host—open the
-              same UI in a new tab:{' '}
-              <a className="ds-link" href="https://embed.docuseal.tech/" target="_blank" rel="noreferrer noopener">
-                Embed demo
-              </a>
-              {' · '}
-              <a className="ds-link" href="https://demo.docuseal.tech/" target="_blank" rel="noreferrer noopener">
-                Full builder demo
-              </a>
-              {' · '}
-              <a className="ds-link" href="https://www.docuseal.com/start" target="_blank" rel="noreferrer noopener">
-                Hosted DocuSeal
-              </a>
-              .
-            </div>
           </div>
         </div>
 
@@ -547,6 +597,10 @@ export default function App() {
             <div>
               <h2 id="pricing-head">Pick throughput, not buzzwords.</h2>
               <p style={{ color: '#64748b', margin: 0 }}>Annual is half the cost of paying month-by-month.</p>
+              <div className="ds-pricing-proof">
+                <span>Best first purchase: Team annual</span>
+                <span>Unlimited templates, audit-ready PDF exports, priority support, and 50% savings.</span>
+              </div>
             </div>
             <div className="ds-cycle" role="group" aria-label="Billing cycle">
               <button type="button" data-active={billing === 'monthly' ? 'true' : 'false'} onClick={() => setBilling('monthly')}>
@@ -588,12 +642,10 @@ export default function App() {
                   <button
                     type="button"
                     className={plan.popular ? 'ds-btn ds-btn-primary' : 'ds-btn ds-btn-ghost'}
-                    onClick={() => {
-                      setSelectedPlan(plan.id)
-                      openCheckoutModal()
-                    }}
+                    onClick={() => void startHostedCheckout(plan.id, billing, `plan-${plan.id}-${billing}`)}
+                    disabled={checkoutLoadingKey !== null}
                   >
-                    Choose {plan.name}
+                    {checkoutLoadingKey === `plan-${plan.id}-${billing}` ? 'Starting secure checkout…' : `Choose ${plan.name}`}
                   </button>
                 </div>
               )
@@ -735,86 +787,8 @@ export default function App() {
       <div className="background-glow glow-right" aria-hidden />
       {renderHeader()}
       {body}
+      {renderCheckoutModal()}
       {renderFooter()}
-
-      {checkoutOpen ? (
-        <div className="ds-modal-root" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-          <button
-            type="button"
-            className="ds-modal-backdrop"
-            aria-label="Close checkout"
-            onClick={() => {
-              if (!checkoutLoading) {
-                setCheckoutOpen(false)
-                setCheckoutUrl(null)
-              }
-            }}
-          />
-          <div className="ds-modal-card">
-            <header>
-              <span id="checkout-title">Secure checkout</span>
-              <button
-                type="button"
-                className="ds-modal-close"
-                onClick={() => {
-                  if (!checkoutLoading) {
-                    setCheckoutOpen(false)
-                    setCheckoutUrl(null)
-                  }
-                }}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </header>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(15,23,42,0.08)' }}>
-              <div className="ds-cycle" role="group" aria-label="Plan">
-                {plans.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    data-active={selectedPlan === p.id ? 'true' : 'false'}
-                    onClick={() => setSelectedPlan(p.id)}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-              <div className="ds-cycle" style={{ marginTop: '10px' }} role="group" aria-label="Billing">
-                <button type="button" data-active={billing === 'monthly' ? 'true' : 'false'} onClick={() => setBilling('monthly')}>
-                  Monthly
-                </button>
-                <button type="button" data-active={billing === 'annual' ? 'true' : 'false'} onClick={() => setBilling('annual')}>
-                  Annual (-50%)
-                </button>
-              </div>
-              {checkoutError ? (
-                <p style={{ color: '#b91c1c', margin: '10px 0 0', fontSize: '0.9rem' }}>{checkoutError}</p>
-              ) : null}
-              {!checkoutUrl ? (
-                <button
-                  type="button"
-                  className="ds-btn ds-btn-primary"
-                  style={{ width: '100%', marginTop: '14px' }}
-                  disabled={checkoutLoading}
-                  onClick={() => void startHostedCheckout()}
-                >
-                  {checkoutLoading ? 'Starting…' : 'Continue to secure checkout'}
-                </button>
-              ) : (
-                <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: '#64748b' }}>
-                  If the frame stays blank,{' '}
-                  <a className="ds-link" href={checkoutUrl} target="_blank" rel="noreferrer">
-                    open checkout in a new tab
-                  </a>
-                  .
-                </p>
-              )}
-            </div>
-            {checkoutUrl ? <iframe className="ds-checkout-frame" title="Secure checkout" src={checkoutUrl} /> : null}
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }

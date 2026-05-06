@@ -4,7 +4,9 @@ compatibility_date = "2026-05-06"
 
 [vars]
 CREEM_API_BASE = "https://api.creem.io"
-# Set product IDs from your Creem dashboard (Workers → Settings → Variables).
+CREEM_ENV = "live"
+# Optional product IDs from your Creem dashboard (Workers -> Settings -> Variables).
+# If omitted, the Worker creates matching one-time Creem products on demand.
 # CREEM_PRODUCT_STARTER_MONTHLY = ""
 # CREEM_PRODUCT_STARTER_YEARLY = ""
 # CREEM_PRODUCT_TEAM_MONTHLY = ""
@@ -12,7 +14,9 @@ CREEM_API_BASE = "https://api.creem.io"
 # CREEM_PRODUCT_SCALE_MONTHLY = ""
 # CREEM_PRODUCT_SCALE_YEARLY = ""
 
-# Store CREEM_API_KEY as a Worker secret: wrangler secret put CREEM_API_KEY
+# Store one live Creem key as a Worker secret:
+# wrangler secret put API_PROD_KEY
+# Accepted aliases: CREEM_API_KEY or account Secrets Store binding CREEM_KEY.
 
 [assets]
 directory = "./dist"

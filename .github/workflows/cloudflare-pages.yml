@@ -1,8 +1,8 @@
-# Optional: deploy the same `dist` to Cloudflare Pages (static + /functions redirect).
-# Set secret PAGES_PROJECT_NAME to your Pages project id, then run this workflow manually.
 name: Deploy to Cloudflare Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -24,6 +24,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ secrets.PAGES_PROJECT_NAME }}
+          command: pages deploy dist --project-name=my-docuseal
         env:
           WRANGLER_SEND_METRICS: false
