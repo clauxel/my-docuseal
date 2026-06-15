@@ -4,9 +4,15 @@
 }
 
 .ds-hero-grid {
-  width: min(760px, calc(100% - 32px));
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.86fr);
+  gap: clamp(28px, 5vw, 74px);
+  align-items: center;
+  width: min(1220px, calc(100% - 32px));
+  min-height: min(760px, calc(100vh - 76px));
   margin: 0 auto;
-  padding: clamp(28px, 5vw, 56px) 0 clamp(48px, 7vw, 88px);
+  padding: clamp(44px, 7vh, 78px) 0 clamp(38px, 6vh, 70px);
 }
 
 .ds-eyebrow {
@@ -20,17 +26,21 @@
 
 .ds-hero h1 {
   font-family: 'Fraunces', 'Georgia', serif;
-  font-size: clamp(2.1rem, 4.6vw, 3.15rem);
-  line-height: 1.08;
-  margin: 0 0 16px;
+  font-size: clamp(2.8rem, 6.2vw, 5.25rem);
+  line-height: 0.96;
+  max-width: 760px;
+  margin: 0 0 18px;
   color: #0c1422;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
 }
 
 .ds-hero p.ds-lede {
-  font-size: 1.02rem;
+  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
   color: #3d4b5c;
-  max-width: 45ch;
-  margin: 0 0 18px;
+  max-width: 58ch;
+  margin: 0 0 20px;
+  line-height: 1.72;
 }
 
 .ds-hero-chips {
@@ -58,7 +68,7 @@
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .ds-btn {
@@ -104,6 +114,185 @@
 .ds-micro-trust {
   font-size: 0.88rem;
   color: #5d6c79;
+}
+
+.ds-hero-proof-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(37, 99, 235, 0.22), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(232, 240, 255, 0.9));
+  box-shadow:
+    0 34px 90px rgba(30, 64, 175, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.ds-hero-proof-card::before {
+  content: '';
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  right: -70px;
+  bottom: -70px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.16);
+}
+
+.ds-proof-card-header,
+.ds-document-card,
+.ds-workflow-step,
+.ds-proof-metrics,
+.ds-proof-cta {
+  position: relative;
+}
+
+.ds-proof-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  color: #475569;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.ds-proof-card-header strong {
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+  font-size: 0.76rem;
+}
+
+.ds-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.14);
+}
+
+.ds-document-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+}
+
+.ds-doc-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ds-document-card strong {
+  color: #0f172a;
+  font-size: 1.18rem;
+}
+
+.ds-status-pill {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.ds-workflow-steps {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ds-workflow-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 13px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.ds-workflow-step > span {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  font-weight: 900;
+}
+
+.ds-workflow-step strong {
+  color: #0f172a;
+  font-size: 0.96rem;
+}
+
+.ds-workflow-step p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.ds-proof-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ds-proof-metrics div {
+  display: grid;
+  gap: 3px;
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.76);
+}
+
+.ds-proof-metrics strong {
+  color: #0f172a;
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-size: 1.38rem;
+  line-height: 1;
+}
+
+.ds-proof-metrics span {
+  color: #64748b;
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.ds-proof-cta {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-weight: 850;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
 }
 
 .ds-conversion-panel,
@@ -328,9 +517,87 @@
   -webkit-backdrop-filter: blur(13px);
 }
 
+.ds-creem-loading,
+.ds-creem-error {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 36px;
+  text-align: center;
+}
+
+.ds-creem-loading {
+  gap: 12px;
+  color: #1d4ed8;
+  font-weight: 850;
+}
+
+.ds-creem-loading span {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
+  border-radius: 999px;
+  animation: ds-spin 0.75s linear infinite;
+}
+
+.ds-creem-error {
+  align-content: center;
+  gap: 16px;
+}
+
+.ds-creem-error p {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+}
+
+.ds-creem-popup-modal {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.16), transparent 36%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+  box-shadow: 0 34px 100px rgba(15, 23, 42, 0.34);
+  padding: 30px;
+}
+
+.ds-creem-popup-modal::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, #16a34a, #2563eb, #1e40af);
+}
+
+.ds-creem-popup-copy {
+  display: grid;
+  gap: 14px;
+}
+
+.ds-creem-popup-copy h2 {
+  max-width: 12ch;
+  margin: 0;
+  color: #0c1422;
+  font-family: 'Fraunces', 'Georgia', serif;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.ds-creem-popup-copy p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.65;
+}
+
 .ds-checkout-modal {
   position: relative;
-  width: min(520px, 100%);
+  width: min(920px, 100%);
+  max-height: min(860px, calc(100vh - 36px));
   overflow: hidden;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.58);
@@ -339,6 +606,8 @@
     #fff;
   box-shadow: 0 34px 100px rgba(15, 23, 42, 0.32);
   padding: 28px;
+  display: flex;
+  flex-direction: column;
 }
 
 .ds-checkout-modal::before {
@@ -353,6 +622,7 @@
   position: absolute;
   top: 14px;
   right: 14px;
+  z-index: 3;
   width: 34px;
   height: 34px;
   border: 0;
@@ -373,7 +643,7 @@
 }
 
 .ds-checkout-modal h2 {
-  max-width: 12ch;
+  max-width: 16ch;
   margin: 0 0 10px;
   color: #0c1422;
   font-family: 'Fraunces', 'Georgia', serif;
@@ -485,8 +755,41 @@
 }
 
 @media (max-width: 900px) {
+  .ds-hero-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 34px;
+  }
+
+  .ds-hero h1 {
+    font-size: clamp(2.45rem, 11vw, 4rem);
+  }
+
+  .ds-hero-proof-card {
+    order: -1;
+  }
+
   .ds-how-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .ds-hero-grid {
+    width: min(100% - 24px, 1220px);
+  }
+
+  .ds-hero-actions .ds-btn {
+    width: 100%;
+  }
+
+  .ds-document-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ds-proof-metrics {
+    grid-template-columns: 1fr;
   }
 }
 

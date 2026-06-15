@@ -8,9 +8,9 @@ export type GuideSeo = {
 }
 
 const siteName = 'DocuSeal Cloud'
-const defaultTitle = 'DocuSeal Cloud | Document signing that ships in days, not quarters'
+const defaultTitle = 'DocuSeal Space - Document Signing, PDF Templates, and E-Sign Workflows'
 const defaultDescription =
-  'Run DocuSeal-class PDF templates, e-signatures, and delivery workflows from one place. Built for teams that need fewer back-and-forth emails and a cleaner audit trail.'
+  'Run DocuSeal-class PDF templates, document signing, e-signatures, delivery workflows, audit trails, and team handoff from one hosted workspace.'
 
 const canonicalLinkId = 'docuseal-canonical-link'
 const structuredDataScriptId = 'docuseal-structured-data'

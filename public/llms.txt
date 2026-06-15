@@ -1,0 +1,21 @@
+# DocuSeal Space
+
+Run DocuSeal-class PDF templates, document signing, e-signatures, delivery workflows, audit trails, and team handoff from one hosted workspace.
+
+Website: https://docuseal.space/
+Pricing: https://docuseal.space/pricing/
+Checkout: https://docuseal.space/checkout/
+Support: support@aigeamy.com
+Type: Hosted SaaS workflow product
+
+Problem:
+- Teams need a quotable product definition, pricing path, evidence trail, and checkout route.
+
+Solution:
+- DocuSeal Space provides a hosted workflow with public pricing, structured evidence, support contact, and report or receipt outputs.
+
+Useful pages:
+- Home: https://docuseal.space/
+- Pricing: https://docuseal.space/pricing/
+- Resources: https://docuseal.space/resources/
+- Sitemap: https://docuseal.space/sitemap.xml

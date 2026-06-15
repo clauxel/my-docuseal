@@ -1,7 +1,12 @@
+import { handleAnalyticsRequest } from './analytics.js'
+import { handleNowPaymentsCheckout } from './nowpayments.js'
 const CANONICAL_ORIGIN = 'https://docuseal.space'
 const CANONICAL_HOST = 'docuseal.space'
 const LEGACY_HOSTS = new Set(['www.docuseal.space'])
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0'])
 const ANNUAL_DISCOUNT_MULTIPLIER = 0.5
+const GOOGLE_SITE_VERIFICATION_PATH = '/google016b6dae8e59f4c0.html'
+const GOOGLE_SITE_VERIFICATION_BODY = 'google-site-verification: google016b6dae8e59f4c0.html'
 
 const creemProductCache = new Map()
 
@@ -43,6 +48,9 @@ function jsonResponse(data, status = 200) {
 }
 
 function maybeRedirectToCanonical(requestUrl) {
+  if (LOCAL_HOSTS.has(requestUrl.hostname)) {
+    return null
+  }
   if (requestUrl.protocol !== 'https:' || LEGACY_HOSTS.has(requestUrl.hostname)) {
     const redirectUrl = new URL(requestUrl)
     redirectUrl.protocol = 'https:'
@@ -191,21 +199,64 @@ async function fetchAsset(request, env) {
 
 export async function handleRequest(request, env) {
   const requestUrl = new URL(request.url)
+
+  if (requestUrl.pathname === '/api/analytics/events') {
+    return handleAnalyticsRequest(request, env, { siteKey: 'docuseal' })
+  }
   const redirect = maybeRedirectToCanonical(requestUrl)
   if (redirect) return redirect
+
+  if (requestUrl.pathname === GOOGLE_SITE_VERIFICATION_PATH) {
+    const headers = securityHeaders()
+    headers.set('Content-Type', 'text/html; charset=utf-8')
+    return new Response(GOOGLE_SITE_VERIFICATION_BODY, { status: 200, headers })
+  }
+
+  if (LOCAL_HOSTS.has(requestUrl.hostname) && !requestUrl.pathname.startsWith('/api/')) {
+    const localFrontendUrl = new URL(requestUrl)
+    localFrontendUrl.port = '5174'
+    return Response.redirect(localFrontendUrl.toString(), 302)
+  }
+
+  if (requestUrl.pathname === '/api/nowpayments-checkout') {
+    return handleNowPaymentsCheckout(request, env, {
+      plans: planCatalog,
+      defaultPlanId: 'team',
+      siteName: 'docuseal',
+      siteKey: 'docuseal',
+      annualDiscountMultiplier: typeof ANNUAL_DISCOUNT_MULTIPLIER !== 'undefined'
+        ? ANNUAL_DISCOUNT_MULTIPLIER
+        : (typeof annualBillingMultiplier !== 'undefined' ? annualBillingMultiplier : 0.5),
+    })
+  }
 
   if (requestUrl.pathname === '/api/runtime') {
     return jsonResponse({
       ok: true,
+      paymentProvider: 'hosted',
       publicAppOrigin: CANONICAL_ORIGIN,
       deployment: 'cloudflare-workers-assets',
       ts: Date.now(),
     })
   }
 
+  if (requestUrl.pathname === '/api/checkout' && request.method !== 'POST') {
+    return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405)
+  }
+
   if (requestUrl.pathname === '/api/checkout' && request.method === 'POST') {
     const apiKey = await firstSecretEnv(env, 'API_PROD_KEY', 'CREEM_API_KEY', 'CREEM_KEY')
     if (!apiKey) {
+      if (LOCAL_HOSTS.has(requestUrl.hostname)) {
+        const forwardedBody = await request.clone().text()
+        return fetch(`${CANONICAL_ORIGIN}${requestUrl.pathname}`, {
+          method: request.method,
+          headers: {
+            'Content-Type': request.headers.get('Content-Type') || 'application/json',
+          },
+          body: forwardedBody,
+        })
+      }
       return jsonResponse({ ok: false, error: 'Payment is not configured yet.' }, 503)
     }
 

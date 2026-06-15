@@ -56,4 +56,3 @@ Add repository secrets `CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`, and `CLOUDFLARE
 Repository target: `git@github.com:clauxel/my-docuseal.git`.
 
 If GitHub API repository creation returns `403 Resource not accessible by personal access token`, use a PAT with repo creation rights or create the empty repo manually, then push `main`.
-

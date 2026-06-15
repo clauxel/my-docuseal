@@ -17,6 +17,7 @@ import {
 import { guideArticles, findGuideByPath } from './content/guides'
 import { buildSeoDocument, syncSeoDocument } from './lib/seo'
 import { deriveRouteView, normalizePathname, scrollToHashTarget, type RouteView } from './lib/routing'
+import { initializeAnalytics, syncAnalyticsPage } from './lib/analytics'
 
 const defaultPublicAppOrigin = 'https://docuseal.space'
 
@@ -28,7 +29,7 @@ type CheckoutModalState = {
   planId: PlanId
   billing: Billing
   loadingKey: string
-  status: 'starting' | 'redirecting' | 'retry'
+  status: 'loading' | 'popup' | 'retry'
   checkoutUrl?: string
 }
 
@@ -91,6 +92,15 @@ function usePathnameSignal() {
     }
   }, [])
 
+
+  useEffect(() => {
+    initializeAnalytics()
+  }, [])
+
+  useEffect(() => {
+    syncAnalyticsPage(pathname, window.location.search)
+  }, [pathname])
+
   useEffect(() => {
     const onPop = () => setPathname(window.location.pathname)
     window.addEventListener('popstate', onPop)
@@ -100,8 +110,8 @@ function usePathnameSignal() {
   return { pathname, navigate, setPathname }
 }
 
-async function createCheckoutSession(planId: PlanId, billing: Billing) {
-  const response = await fetch('/api/checkout', {
+async function createCheckoutSession(planId: PlanId, billing: Billing, endpoint = '/api/checkout') {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ planId, billing }),
@@ -206,93 +216,92 @@ export default function App() {
     }
   }, [pathname])
 
-  const startHostedCheckout = useCallback(async (planId: PlanId, nextBilling: Billing, loadingKey: string) => {
+  const startHostedCheckout = useCallback(async (planId: PlanId, nextBilling: Billing, loadingKey: string, provider = 'creem') => {
     setCheckoutLoadingKey(loadingKey)
-    setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'starting' })
+    setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'loading' })
+    const width = 560
+    const height = 760
+    const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2))
+    const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2))
+    const popup = window.open(
+      'about:blank',
+      'docuseal-creem-checkout',
+      `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+    )
+    if (popup) {
+      popup.document.write('<!doctype html><title>Opening checkout...</title><p style="font:16px sans-serif;padding:24px">Opening secure checkout...</p>')
+      popup.document.close()
+    }
     try {
-      const url = await createCheckoutSession(planId, nextBilling)
-      setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'redirecting', checkoutUrl: url })
-      window.setTimeout(() => window.location.assign(url), 420)
+      const url = await createCheckoutSession(planId, nextBilling, provider === 'nowpayments' ? '/api/nowpayments-checkout' : '/api/checkout')
+      if (popup && !popup.closed) {
+        popup.location.replace(url)
+      }
+      setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'popup', checkoutUrl: url })
+      setCheckoutLoadingKey(null)
     } catch {
+      if (popup && !popup.closed) popup.close()
       setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'retry' })
       setCheckoutLoadingKey(null)
     }
   }, [])
 
+  const jumpToPricing = useCallback(() => {
+    setBilling('annual')
+    navigate('/#pricing')
+  }, [navigate])
+
   const renderCheckoutModal = () => {
     if (!checkoutModal) return null
 
-    const fallbackPlan = plans.find((plan) => plan.id === 'team') as (typeof plans)[number]
-    const selectedPlan = plans.find((plan) => plan.id === checkoutModal.planId) ?? fallbackPlan
-    const selectedMonthly = checkoutModal.billing === 'annual' ? selectedPlan.monthlyUsd * 0.5 : selectedPlan.monthlyUsd
-    const selectedTotal =
-      checkoutModal.billing === 'annual'
-        ? `${formatMoney(selectedMonthly * 12)} billed today`
-        : `${formatMoney(selectedMonthly)} billed today`
-    const canClose = checkoutModal.status !== 'redirecting'
-    const statusCopy =
-      checkoutModal.status === 'retry'
-        ? "The secure session didn't open. Your selected plan is saved, so one retry is enough."
-        : checkoutModal.status === 'redirecting'
-          ? 'Secure checkout is opening now. After payment, you return to the homepage automatically.'
-          : 'Preparing the hosted checkout with the recommended annual savings applied.'
+    const checkoutUrl = checkoutModal.status === 'popup' ? checkoutModal.checkoutUrl : undefined
 
     return (
       <div className="ds-checkout-backdrop" role="presentation">
-        <section className="ds-checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-          {canClose ? (
-            <button type="button" className="ds-checkout-close" aria-label="Close checkout" onClick={() => setCheckoutModal(null)}>
-              ×
-            </button>
-          ) : null}
-          <p className="ds-checkout-kicker">Secure checkout</p>
-          <h2 id="checkout-title">
-            {selectedPlan.name} {checkoutModal.billing === 'annual' ? 'annual' : 'monthly'} is ready.
-          </h2>
-          <p className="ds-checkout-copy">{statusCopy}</p>
-          <div className="ds-checkout-summary">
-            <span>
-              {formatMoney(selectedMonthly)}
-              <small>/mo</small>
-            </span>
-            <strong>{selectedTotal}</strong>
-          </div>
-          <div className="ds-checkout-proof">
-            <span>Recommended start: Team annual</span>
-            <span>50% annual savings, unlimited templates, CSV bulk send, signer roles, and priority setup help.</span>
-          </div>
-          <ul className="ds-checkout-list">
-            <li>Hosted DocuSeal-class template and signing workflow.</li>
-            <li>Audit-ready PDF exports and webhook-ready completion events.</li>
-            <li>Payment completes on Creem and returns here after success.</li>
-          </ul>
-          {checkoutModal.status === 'retry' ? (
-            <div className="ds-checkout-actions">
-              <button
-                type="button"
-                className="ds-btn ds-btn-primary"
-                onClick={() =>
-                  void startHostedCheckout(checkoutModal.planId, checkoutModal.billing, checkoutModal.loadingKey)
-                }
-                disabled={checkoutLoadingKey !== null}
-              >
-                Try secure checkout again
-              </button>
-              <button
-                type="button"
-                className="ds-btn ds-btn-ghost"
-                onClick={() => {
-                  setCheckoutModal(null)
-                  navigate('/#pricing')
-                }}
-              >
-                Review pricing
-              </button>
+        <section className="ds-creem-popup-modal" role="dialog" aria-modal="true" aria-labelledby="creem-popup-title">
+          <button type="button" className="ds-checkout-close" aria-label="Close checkout" onClick={() => setCheckoutModal(null)}>
+            ×
+          </button>
+          {checkoutUrl ? (
+            <div className="ds-creem-popup-copy">
+              <p className="ds-checkout-kicker">Secure checkout</p>
+              <h2 id="creem-popup-title">Creem checkout opened.</h2>
+              <p>
+                Complete payment in the Creem window. This page stays open and returns to the homepage after successful
+                checkout.
+              </p>
+              <a className="ds-btn ds-btn-primary" href={checkoutUrl} target="_blank" rel="noreferrer noopener">
+                Reopen Creem checkout
+              </a>
+            </div>
+          ) : checkoutModal.status === 'loading' ? (
+            <div className="ds-creem-loading" aria-live="polite">
+              <span />
+              Opening Creem checkout…
             </div>
           ) : (
-            <div className="ds-checkout-progress" aria-live="polite">
-              <span />
-              {checkoutModal.status === 'redirecting' ? 'Opening hosted checkout…' : 'Creating secure checkout…'}
+            <div className="ds-creem-error">
+              <p>Creem checkout did not open. Please try again.</p>
+              <div className="ds-checkout-actions">
+                <button
+                  type="button"
+                  className="ds-btn ds-btn-primary"
+                  onClick={() => void startHostedCheckout(checkoutModal.planId, checkoutModal.billing, checkoutModal.loadingKey)}
+                  disabled={checkoutLoadingKey !== null}
+                >
+                  Open Creem checkout
+                </button>
+                <button
+                  type="button"
+                  className="ds-btn ds-btn-ghost"
+                  onClick={() => {
+                    setCheckoutModal(null)
+                    navigate('/#pricing')
+                  }}
+                >
+                  Review pricing
+                </button>
+              </div>
             </div>
           )}
         </section>
@@ -353,10 +362,9 @@ export default function App() {
           <button
             type="button"
             className="ds-btn ds-btn-ghost"
-            onClick={() => void startHostedCheckout('team', 'annual', 'nav-team-annual')}
-            disabled={checkoutLoadingKey !== null}
+            onClick={jumpToPricing}
           >
-            {checkoutLoadingKey === 'nav-team-annual' ? 'Starting…' : 'Start now'}
+            Start now
           </button>
         </div>
       </div>
@@ -435,37 +443,84 @@ export default function App() {
         <div className="ds-hero-grid" id="top">
           <div className="ds-hero">
             <p className="ds-eyebrow">Hosted DocuSeal workflows</p>
-            <h1>Build fillable PDFs, send signing links, and keep every signed copy ready to file.</h1>
+            <h1>Launch a signature workflow your team can trust by Friday.</h1>
             <p className="ds-lede">
-              Turn the DocuSeal flow into a cleaner hosted surface: reusable templates, signer routing, reminder delivery,
-              audit-ready PDFs, and webhook exports without asking your team to self-host the stack first.
+              Build fillable PDFs, route signers, send secure links, and archive signed copies without spending the first
+              sprint on servers, SMTP, storage, and webhook glue.
             </p>
             <div className="ds-hero-chips" aria-label="Key features">
-              <span>Template builder</span>
-              <span>Signer roles</span>
-              <span>Audit trail</span>
-              <span>API + webhooks</span>
+              <span>Unlimited templates on Team</span>
+              <span>50% annual savings</span>
+              <span>Audit-ready exports</span>
             </div>
             <div className="ds-hero-actions">
               <button
                 type="button"
                 className="ds-btn ds-btn-primary"
-                onClick={() => void startHostedCheckout('team', 'annual', 'hero-team-annual')}
-                disabled={checkoutLoadingKey !== null}
+                onClick={jumpToPricing}
               >
                 <Sparkles size={18} />
-                {checkoutLoadingKey === 'hero-team-annual' ? 'Starting secure checkout…' : 'Start Team annual'}
+                Start Team annual
+              </button>
+              <button type="button" className="ds-btn ds-btn-ghost" onClick={() => navigate('/#capabilities')}>
+                See what is included
               </button>
             </div>
             <div className="ds-conversion-panel">
-              <strong>Why teams start on Team annual</strong>
-              <span>50% annual savings, unlimited templates, CSV bulk send, signer roles, and priority setup help.</span>
+              <strong>Recommended path: choose Team annual in pricing</strong>
+              <span>Most teams need unlimited templates, signer roles, CSV bulk send, and priority setup help from day one.</span>
             </div>
             <p className="ds-micro-trust">
               <ShieldCheck size={16} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 6 }} />
               SOC-minded defaults: HTTPS-only, explicit retention controls, and exports you can file away.
             </p>
           </div>
+          <aside className="ds-hero-proof-card" aria-label="DocuSeal workflow preview">
+            <div className="ds-proof-card-header">
+              <span className="ds-live-dot" aria-hidden />
+              <span>Ready-to-send workflow</span>
+              <strong>Team annual</strong>
+            </div>
+            <div className="ds-document-card">
+              <div>
+                <span className="ds-doc-label">Template</span>
+                <strong>Sales agreement.pdf</strong>
+              </div>
+              <span className="ds-status-pill">ready</span>
+            </div>
+            <div className="ds-workflow-steps">
+              {[
+                ['1', 'Build fields', 'Signature, date, text, checkbox'],
+                ['2', 'Route signers', 'Roles, reminders, mobile signing'],
+                ['3', 'Archive proof', 'Signed PDF, events, webhook export'],
+              ].map(([step, title, body]) => (
+                <div className="ds-workflow-step" key={title}>
+                  <span>{step}</span>
+                  <div>
+                    <strong>{title}</strong>
+                    <p>{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="ds-proof-metrics" aria-label="Conversion proof points">
+              <div>
+                <strong>0</strong>
+                <span>servers to manage</span>
+              </div>
+              <div>
+                <strong>50%</strong>
+                <span>annual discount</span>
+              </div>
+              <div>
+                <strong>1 day</strong>
+                <span>first workflow target</span>
+              </div>
+            </div>
+            <button type="button" className="ds-proof-cta" onClick={jumpToPricing}>
+              Compare plans and start with Team
+            </button>
+          </aside>
         </div>
 
         <section className="ds-section" id="capabilities" aria-labelledby="cap-head">
@@ -647,6 +702,14 @@ export default function App() {
                   >
                     {checkoutLoadingKey === `plan-${plan.id}-${billing}` ? 'Starting secure checkout…' : `Choose ${plan.name}`}
                   </button>
+                    <button
+                      type="button"
+                      className="ds-btn ds-btn-ghost"
+                      onClick={() => void startHostedCheckout(plan.id, billing, `plan-${plan.id}-${billing}-wallet`, 'nowpayments')}
+                      disabled={checkoutLoadingKey !== null}
+                    >
+                      {checkoutLoadingKey === `plan-${plan.id}-${billing}-wallet` ? 'Opening USDC wallet...' : 'Pay with USDC Wallet'}
+                    </button>
                 </div>
               )
             })}
