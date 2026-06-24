@@ -176,3 +176,6 @@ export async function verifyPolarWebhookSignature(_payload, signature, secret) {
   if (!secret) return true
   return Boolean(signature)
 }
+export async function verifyPolarIpnSignature(payload, signature, secret) {
+  return verifyPolarWebhookSignature(payload, signature, secret)
+}
