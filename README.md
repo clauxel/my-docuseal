@@ -18,23 +18,23 @@ npx wrangler dev
 ## Cloudflare Worker
 
 1. Deploy with `npm run cloudflare:deploy`.
-2. Store one live Creem key as a Worker secret:
+2. Store one live Polar key as a Worker secret:
 
 ```bash
 npx wrangler secret put API_PROD_KEY
 ```
 
-Accepted aliases are `CREEM_API_KEY` or an account Secrets Store binding named `CREEM_KEY`.
+Accepted aliases are `POLAR_API_KEY` or an account Secrets Store binding named `POLAR_KEY`.
 
-Creem product IDs are optional. If these vars are omitted, the Worker creates matching one-time Creem products on demand:
+Polar product IDs are optional. If these vars are omitted, the Worker creates matching one-time Polar products on demand:
 
 ```text
-CREEM_PRODUCT_STARTER_MONTHLY
-CREEM_PRODUCT_STARTER_YEARLY
-CREEM_PRODUCT_TEAM_MONTHLY
-CREEM_PRODUCT_TEAM_YEARLY
-CREEM_PRODUCT_SCALE_MONTHLY
-CREEM_PRODUCT_SCALE_YEARLY
+POLAR_PRODUCT_STARTER_MONTHLY
+POLAR_PRODUCT_STARTER_YEARLY
+POLAR_PRODUCT_TEAM_MONTHLY
+POLAR_PRODUCT_TEAM_YEARLY
+POLAR_PRODUCT_SCALE_MONTHLY
+POLAR_PRODUCT_SCALE_YEARLY
 ```
 
 Attach custom hostnames **docuseal.space** and **www.docuseal.space** to the Worker. Keep Cloudflare **Always Use HTTPS** enabled; the Worker and Pages Function also redirect HTTP and `www` to the apex HTTPS host.

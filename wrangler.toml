@@ -3,20 +3,20 @@ main = "worker/index.js"
 compatibility_date = "2026-05-06"
 
 [vars]
-CREEM_API_BASE = "https://api.creem.io"
-CREEM_ENV = "live"
-# Optional product IDs from your Creem dashboard (Workers -> Settings -> Variables).
-# If omitted, the Worker creates matching one-time Creem products on demand.
-# CREEM_PRODUCT_STARTER_MONTHLY = ""
-# CREEM_PRODUCT_STARTER_YEARLY = ""
-# CREEM_PRODUCT_TEAM_MONTHLY = ""
-# CREEM_PRODUCT_TEAM_YEARLY = ""
-# CREEM_PRODUCT_SCALE_MONTHLY = ""
-# CREEM_PRODUCT_SCALE_YEARLY = ""
+POLAR_API_BASE = "https://api.polar.sh"
+POLAR_ENV = "live"
+# Optional product IDs from your Polar dashboard (Workers -> Settings -> Variables).
+# If omitted, the Worker creates matching one-time Polar products on demand.
+# POLAR_PRODUCT_STARTER_MONTHLY = ""
+# POLAR_PRODUCT_STARTER_YEARLY = ""
+# POLAR_PRODUCT_TEAM_MONTHLY = ""
+# POLAR_PRODUCT_TEAM_YEARLY = ""
+# POLAR_PRODUCT_SCALE_MONTHLY = ""
+# POLAR_PRODUCT_SCALE_YEARLY = ""
 
-# Store one live Creem key as a Worker secret:
+# Store one live Polar key as a Worker secret:
 # wrangler secret put API_PROD_KEY
-# Accepted aliases: CREEM_API_KEY or account Secrets Store binding CREEM_KEY.
+# Accepted aliases: POLAR_API_KEY or account Secrets Store binding POLAR_KEY.
 
 [assets]
 directory = "./dist"

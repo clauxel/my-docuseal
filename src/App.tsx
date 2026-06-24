@@ -216,7 +216,7 @@ export default function App() {
     }
   }, [pathname])
 
-  const startHostedCheckout = useCallback(async (planId: PlanId, nextBilling: Billing, loadingKey: string, provider = 'creem') => {
+  const startHostedCheckout = useCallback(async (planId: PlanId, nextBilling: Billing, loadingKey: string, provider = 'polar') => {
     setCheckoutLoadingKey(loadingKey)
     setCheckoutModal({ planId, billing: nextBilling, loadingKey, status: 'loading' })
     const width = 560
@@ -225,7 +225,7 @@ export default function App() {
     const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2))
     const popup = window.open(
       'about:blank',
-      'docuseal-creem-checkout',
+      'docuseal-polar-checkout',
       `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
     )
     if (popup) {
@@ -233,7 +233,7 @@ export default function App() {
       popup.document.close()
     }
     try {
-      const url = await createCheckoutSession(planId, nextBilling, provider === 'nowpayments' ? '/api/nowpayments-checkout' : '/api/checkout')
+      const url = await createCheckoutSession(planId, nextBilling, provider === 'polar' ? '/api/polar-checkout' : '/api/checkout')
       if (popup && !popup.closed) {
         popup.location.replace(url)
       }
@@ -258,30 +258,30 @@ export default function App() {
 
     return (
       <div className="ds-checkout-backdrop" role="presentation">
-        <section className="ds-creem-popup-modal" role="dialog" aria-modal="true" aria-labelledby="creem-popup-title">
+        <section className="ds-polar-popup-modal" role="dialog" aria-modal="true" aria-labelledby="polar-popup-title">
           <button type="button" className="ds-checkout-close" aria-label="Close checkout" onClick={() => setCheckoutModal(null)}>
             ×
           </button>
           {checkoutUrl ? (
-            <div className="ds-creem-popup-copy">
+            <div className="ds-polar-popup-copy">
               <p className="ds-checkout-kicker">Secure checkout</p>
-              <h2 id="creem-popup-title">Creem checkout opened.</h2>
+              <h2 id="polar-popup-title">Polar checkout opened.</h2>
               <p>
-                Complete payment in the Creem window. This page stays open and returns to the homepage after successful
+                Complete payment in the Polar window. This page stays open and returns to the homepage after successful
                 checkout.
               </p>
               <a className="ds-btn ds-btn-primary" href={checkoutUrl} target="_blank" rel="noreferrer noopener">
-                Reopen Creem checkout
+                Reopen Polar checkout
               </a>
             </div>
           ) : checkoutModal.status === 'loading' ? (
-            <div className="ds-creem-loading" aria-live="polite">
+            <div className="ds-polar-loading" aria-live="polite">
               <span />
-              Opening Creem checkout…
+              Opening Polar checkout…
             </div>
           ) : (
-            <div className="ds-creem-error">
-              <p>Creem checkout did not open. Please try again.</p>
+            <div className="ds-polar-error">
+              <p>Polar checkout did not open. Please try again.</p>
               <div className="ds-checkout-actions">
                 <button
                   type="button"
@@ -289,7 +289,7 @@ export default function App() {
                   onClick={() => void startHostedCheckout(checkoutModal.planId, checkoutModal.billing, checkoutModal.loadingKey)}
                   disabled={checkoutLoadingKey !== null}
                 >
-                  Open Creem checkout
+                  Open Polar checkout
                 </button>
                 <button
                   type="button"
@@ -705,7 +705,7 @@ export default function App() {
                     <button
                       type="button"
                       className="ds-btn ds-btn-ghost"
-                      onClick={() => void startHostedCheckout(plan.id, billing, `plan-${plan.id}-${billing}-wallet`, 'nowpayments')}
+                      onClick={() => void startHostedCheckout(plan.id, billing, `plan-${plan.id}-${billing}-wallet`, 'polar')}
                       disabled={checkoutLoadingKey !== null}
                     >
                       {checkoutLoadingKey === `plan-${plan.id}-${billing}-wallet` ? 'Opening USDC wallet...' : 'Pay with USDC Wallet'}
